@@ -236,12 +236,15 @@
     <section id="arena" class="relative">
         <div class="spell-field shadow-2xl" id="spell-field">
             <!-- 目標圖層 (正確解答的排版) -->
-            <div id="targets-layer" class="flex-layer">
+            <div id="targets-layer" class="flex-layer" style="">
                 <!-- Targets injected by JS -->
             </div>
             
             <!-- 玩家控制圖層 (綁定輸入框) -->
-            <div id="player-layer" class="flex-layer">
+            <div id="player-layer" class="flex-layer" style="">
+                <!-- Spells injected by JS -->
+            </div>
+        </div>
         
         <!-- 過關提示字 -->
         <div id="win-message" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 transition-opacity duration-500 z-20">
