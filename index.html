@@ -259,7 +259,27 @@
                 <button id="next-btn" class="hidden mt-2 py-3 bg-gradient-to-r from-green-700 to-emerald-600 hover:from-green-600 hover:to-emerald-500 text-white font-bold rounded border border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.5)] transition-all">
                     翻閱下一章 ➔
                 </button>
+                
+                <!-- 重新開始按鈕 (破關後顯示) -->
+                <button id="restart-btn" class="hidden mt-2 py-3 bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-bold rounded border border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all">
+                    🔄 再次研習魔法 (重新開始)
+                </button>
             </div>
+
+            <div class="mt-8 border-t border-purple-900/50 pt-5">
+                <h3 class="text-sm text-purple-300 font-bold mb-3 tracking-widest flex items-center gap-2 drop-shadow-md">
+                    <span>📜</span> 契約精靈圖鑑
+                </h3>
+                <div id="sprite-gallery" class="flex gap-3 justify-center md:justify-start">
+                    <!-- 5個預設未解鎖的圖鑑槽位 -->
+                    <div class="gallery-slot w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-slate-700 bg-black/50 flex items-center justify-center text-xl md:text-2xl opacity-50 grayscale transition-all duration-700" id="gallery-slot-0">❓</div>
+                    <div class="gallery-slot w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-slate-700 bg-black/50 flex items-center justify-center text-xl md:text-2xl opacity-50 grayscale transition-all duration-700" id="gallery-slot-1">❓</div>
+                    <div class="gallery-slot w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-slate-700 bg-black/50 flex items-center justify-center text-xl md:text-2xl opacity-50 grayscale transition-all duration-700" id="gallery-slot-2">❓</div>
+                    <div class="gallery-slot w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-slate-700 bg-black/50 flex items-center justify-center text-xl md:text-2xl opacity-50 grayscale transition-all duration-700" id="gallery-slot-3">❓</div>
+                    <div class="gallery-slot w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-slate-700 bg-black/50 flex items-center justify-center text-xl md:text-2xl opacity-50 grayscale transition-all duration-700" id="gallery-slot-4">❓</div>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -278,16 +298,18 @@
         
         <!-- 過關大字提示 -->
         <div id="win-message" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 transition-opacity duration-500 z-20 w-full">
-            <h2 class="text-5xl md:text-6xl text-green-400 drop-shadow-[0_0_25px_rgba(34,197,94,1)] font-bold text-center tracking-widest uppercase">
-                Spell Bound!
-            </h2>
+            <div class="text-center pointer-events-none">
+                <h2 class="text-5xl md:text-6xl text-green-400 drop-shadow-[0_0_25px_rgba(34,197,94,1)] font-bold tracking-widest uppercase mb-4">
+                    Spell Bound!
+                </h2>
+            </div>
         </div>
     </section>
 
     <script>
         /**
          * 關卡資料庫 (Level Data)
-         * 完美對應講義的 5 個練習：display, justify-content, align-items, flex-direction, flex-wrap
+         * 加入了 reward 屬性，用來發放過關的契約精靈
          */
         const levels = [
             {
@@ -296,7 +318,8 @@
                 hint: "💡 提示：所有 Flexbox 魔法的起手式，必須先在父容器設定 display 屬性。<br>試著輸入：<br><code class='text-purple-300'>display: flex;</code>",
                 baseStyle: "", 
                 targetStyle: "display: flex;",
-                items: ["🔥", "💧", "🍃"]
+                items: ["🔥", "💧", "🍃"],
+                reward: { name: "爆裂火精靈", icon: "🔥" }
             },
             {
                 title: "第二章：水平匯聚 (justify-content)",
@@ -304,7 +327,8 @@
                 hint: "💡 提示：控制「主軸（水平）」對齊的屬性是 justify-content。置中的值是 center。<br>試著輸入：<br><code class='text-purple-300'>justify-content: center;</code>",
                 baseStyle: "display: flex;", 
                 targetStyle: "justify-content: center;",
-                items: ["🔮", "🔮", "🔮"]
+                items: ["🔮", "🔮", "🔮"],
+                reward: { name: "幻法秘精靈", icon: "🔮" }
             },
             {
                 title: "第三章：垂直校準 (align-items)",
@@ -312,7 +336,8 @@
                 hint: "💡 提示：控制「交叉軸（垂直）」對齊的屬性是 align-items。置中的值也是 center。<br>試著輸入：<br><code class='text-purple-300'>align-items: center;</code>",
                 baseStyle: "display: flex;\njustify-content: center;", 
                 targetStyle: "align-items: center;",
-                items: ["✨", "✨", "✨"]
+                items: ["✨", "✨", "✨"],
+                reward: { name: "聖光耀精靈", icon: "✨" }
             },
             {
                 title: "第四章：魔力逆轉 (flex-direction)",
@@ -320,16 +345,17 @@
                 hint: "💡 提示：改變主軸方向的屬性是 flex-direction。直向（欄位）的值為 column。<br>試著輸入：<br><code class='text-purple-300'>flex-direction: column;</code>",
                 baseStyle: "display: flex;\njustify-content: center;\nalign-items: center;",
                 targetStyle: "flex-direction: column;",
-                items: ["🛡️", "🛡️", "🛡️"]
+                items: ["🛡️", "🛡️", "🛡️"],
+                reward: { name: "鐵壁盾精靈", icon: "🛡️" }
             },
             {
                 title: "第五章：萬法歸宗 (flex-wrap)",
                 desc: "危險！你一次召喚了太多的光球，它們全部擠在同一行，法力互相干擾縮小了！<br>請設定當空間不足時，光球會<b>自動換行</b>排列。",
                 hint: "💡 提示：預設下 Flexbox 會把所有元素塞在同一行。要允許元素換到下一行，請使用 flex-wrap 屬性，並設定為 wrap。<br>試著輸入：<br><code class='text-purple-300'>flex-wrap: wrap;</code>",
-                baseStyle: "display: flex;\njustify-content: center;\nalign-content: center;", // 加入 align-content 讓多行置中好看點
+                baseStyle: "display: flex;\njustify-content: center;\nalign-content: center;",
                 targetStyle: "flex-wrap: wrap;",
-                // 產生 12 個隨機光球來觸發換行
-                items: Array(12).fill().map((_, i) => ['🔥', '💧', '🍃', '✨', '🔮', '⚡'][i % 6])
+                items: Array(12).fill().map((_, i) => ['🔥', '💧', '🍃', '✨', '🔮', '⚡'][i % 6]),
+                reward: { name: "萬象大精靈", icon: "🌌" }
             }
         ];
 
@@ -352,6 +378,7 @@
         
         const checkBtn = document.getElementById('check-btn');
         const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
         const feedbackMsg = document.getElementById('feedback-msg');
         
         const hintBtn = document.getElementById('hint-btn');
@@ -408,6 +435,7 @@
             spellField.classList.remove('win-state');
             winMessage.style.opacity = '0';
             nextBtn.classList.add('hidden');
+            restartBtn.classList.add('hidden');
             checkBtn.disabled = false;
             checkBtn.classList.remove('opacity-50');
             
@@ -478,6 +506,27 @@
             spellField.classList.add('win-state');
             winMessage.style.opacity = '1';
             
+            // 取得目前的獎勵精靈
+            const reward = levels[currentLevelIndex].reward;
+
+            // 解鎖左下角的圖鑑槽位
+            const slot = document.getElementById(`gallery-slot-${currentLevelIndex}`);
+            slot.innerText = reward.icon;
+            slot.classList.remove('opacity-50', 'grayscale', 'border-slate-700', 'bg-black/50');
+            slot.classList.add('opacity-100', 'border-yellow-400', 'bg-purple-800/80', 'shadow-[0_0_15px_rgba(234,179,8,0.6)]', 'scale-110');
+            
+            // 畫面中間顯示獲得精靈的特效
+            winMessage.innerHTML = `
+                <div class="text-center pointer-events-none">
+                    <h2 class="text-5xl md:text-6xl text-green-400 drop-shadow-[0_0_25px_rgba(34,197,94,1)] font-bold tracking-widest uppercase mb-4">
+                        Spell Bound!
+                    </h2>
+                    <div class="text-2xl text-yellow-300 font-bold drop-shadow-md animate-[bounce_2s_infinite]">
+                        ✨ 成功締結契約：${reward.name} ${reward.icon} ✨
+                    </div>
+                </div>
+            `;
+
             feedbackMsg.innerText = "🌟 詠唱成功！魔力完美共鳴！";
             feedbackMsg.className = "text-sm font-bold text-green-400 opacity-100 transition-opacity drop-shadow-md";
 
@@ -487,9 +536,16 @@
             if (currentLevelIndex < levels.length - 1) {
                 nextBtn.classList.remove('hidden');
             } else {
-                // 全部破關
-                winMessage.innerHTML = `<h2 class="text-4xl md:text-5xl text-yellow-400 drop-shadow-[0_0_20px_rgba(234,179,8,1)] font-bold text-center uppercase tracking-widest"><span class="text-6xl mb-2 block">🎓</span>Archmage<br><span class="text-xl text-yellow-200 tracking-normal mt-4 block">你已完全掌握 Flexbox 基礎魔法！</span></h2>`;
+                // 全部破關：顯示收集完成
+                winMessage.innerHTML = `
+                    <div class="text-center pointer-events-none">
+                        <h2 class="text-4xl md:text-5xl text-yellow-400 drop-shadow-[0_0_20px_rgba(234,179,8,1)] font-bold uppercase tracking-widest">
+                            <span class="text-6xl mb-2 block">🎓</span>Archmage<br>
+                            <span class="text-xl text-yellow-200 tracking-normal mt-4 block">你已收集所有精靈，成為真正的精靈使！</span>
+                        </h2>
+                    </div>`;
                 nextBtn.classList.add('hidden');
+                restartBtn.classList.remove('hidden');
             }
         }
 
@@ -516,6 +572,25 @@
 
         nextBtn.addEventListener('click', () => {
             loadLevel(currentLevelIndex + 1);
+        });
+
+        restartBtn.addEventListener('click', () => {
+            // 重置精靈圖鑑的狀態
+            const slots = document.querySelectorAll('.gallery-slot');
+            slots.forEach(slot => {
+                slot.innerText = '❓';
+                slot.className = 'gallery-slot w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-slate-700 bg-black/50 flex items-center justify-center text-xl md:text-2xl opacity-50 grayscale transition-all duration-700';
+            });
+
+            // 恢復原本的破關文字結構
+            winMessage.innerHTML = `
+                <div class="text-center pointer-events-none">
+                    <h2 class="text-5xl md:text-6xl text-green-400 drop-shadow-[0_0_25px_rgba(34,197,94,1)] font-bold tracking-widest uppercase mb-4">
+                        Spell Bound!
+                    </h2>
+                </div>
+            `;
+            loadLevel(0);
         });
 
         // 視窗縮放時重新判定（避免 RWD 讓座標跑掉）
