@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexbox 魔法書</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-glow: 0 0 15px rgba(139, 92, 246, 0.6);
+            --success-glow: 0 0 30px rgba(34, 197, 94, 0.8);
+            --book-gold: #b8860b;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #050510;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .font-code {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* 背景星空特效 */
+        .magic-bg {
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #050510 100%);
+            position: relative;
+        }
+
+        #sidebar {
+            background: rgba(10, 10, 20, 0.95);
+            border-right: 2px solid var(--book-gold);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 魔法書編輯器造型 */
+        .grimoire-container {
+            background: #111827; /* 深色羊皮紙質感基底 */
+            border: 2px solid var(--book-gold);
+            border-radius: 4px 16px 16px 4px; /* 模擬書本右側邊緣弧度 */
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: inset 10px 0 20px rgba(0,0,0,0.8), inset -2px 0 5px rgba(184, 134, 11, 0.3);
+        }
+
+        /* 書本裝飾線 */
+        .grimoire-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 24px; bottom: 0;
+            width: 2px;
+            background: rgba(184, 134, 11, 0.2);
+        }
+
+        #css-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #c4b5fd; /* 咒語字體顏色為亮紫色 */
+            outline: none;
+            resize: none;
+            line-height: 1.6;
+            min-height: 100px;
+            font-size: 1.1rem;
+            text-shadow: 0 0 5px rgba(196, 181, 253, 0.5);
+        }
+
+        #css-input::placeholder {
+            color: #4b5563;
+            text-shadow: none;
+        }
+
+        #arena {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        /* 外層容器：召喚陣 (Summoning Circle) */
+        .spell-field {
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            max-height: 600px;
+            position: relative;
+            border: 3px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%; /* 讓它看起來像一個陣法 */
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, rgba(0,0,0,0.4) 70%);
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.1), inset 0 0 50px rgba(139, 92, 246, 0.1);
+            overflow: visible;
+            transition: all 0.5s ease;
+        }
+
+        /* 陣法裝飾刻度 */
+        .spell-field::before {
+            content: '';
+            position: absolute;
+            top: -15px; left: -15px; right: -15px; bottom: -15px;
+            border: 1px dashed rgba(139, 92, 246, 0.4);
+            border-radius: 50%;
+            animation: rotateSlow 60s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotateSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .flex-layer {
+            position: absolute;
+            top: 10%; left: 10%; right: 10%; bottom: 10%; /* 留出圓形邊緣空間 */
+            padding: 1rem;
+            pointer-events: none;
+        }
+
+        /* 目標位置 (結界節點/凹槽) */
+        .target-rune {
+            width: 70px; height: 70px;
+            background-color: rgba(225, 29, 72, 0.05);
+            border: 2px dashed rgba(225, 29, 72, 0.6);
+            border-radius: 50%;
+            margin: 8px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 15px rgba(225, 29, 72, 0.2);
+        }
+
+        /* 玩家操作的實體物件 (元素精靈/光球) */
+        .player-rune {
+            width: 70px; height: 70px;
+            background: radial-gradient(circle at 30% 30%, #c084fc, #7e22ce);
+            border: 2px solid #e9d5ff;
+            border-radius: 50%;
+            margin: 8px;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.8), inset 0 0 15px rgba(255,255,255,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 5;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* 過關狀態特效 */
+        @keyframes successPulse {
+            0% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.3), inset 0 0 30px rgba(34, 197, 94, 0.3); border-color: #22c55e; }
+            50% { box-shadow: 0 0 60px rgba(34, 197, 94, 0.6), inset 0 0 60px rgba(34, 197, 94, 0.6); border-color: #4ade80; }
+            100% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.3), inset 0 0 30px rgba(34, 197, 94, 0.3); border-color: #22c55e; }
+        }
+
+        .win-state .player-rune {
+            background: radial-gradient(circle at 30% 30%, #86efac, #16a34a);
+            border-color: #bbf7d0;
+            box-shadow: var(--success-glow);
+            animation: none; /* 停止漂浮 */
+        }
+
+        .win-state .target-rune {
+            opacity: 0; /* 成功時隱藏目標框 */
+        }
+
+        .win-state .spell-field {
+            animation: successPulse 2s infinite;
+        }
+
+        /* 手機版排版調整 */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; height: 50vh; border-right: none; border-bottom: 2px solid var(--book-gold); }
+            #arena { height: 50vh; padding: 1rem; }
+            .target-rune, .player-rune { width: 50px; height: 50px; font-size: 1.5rem; margin: 4px;} 
+            .spell-field { border-radius: 16px; } /* 手機上圓形太佔空間，改為圓角矩形 */
+            .spell-field::before { display: none; }
+        }
+    </style>
+</head>
+<body class="magic-bg flex flex-col md:flex-row">
+
+    <section id="sidebar" class="w-full md:w-1/3 lg:w-2/5 flex flex-col h-[50vh] md:h-full">
+        <div class="p-6 flex-grow overflow-y-auto">
+            <h1 class="text-3xl text-purple-300 mb-2 font-bold tracking-wider drop-shadow-[0_0_8px_rgba(216,180,254,0.8)] flex items-center gap-3">
+                <span>📖</span> Flexbox 詠唱卷軸
+            </h1>
+            
+            <!-- 關卡指示器 -->
+            <div class="flex items-center justify-between mb-6 border-b border-purple-900/50 pb-2">
+                <span class="text-yellow-600 text-sm font-bold uppercase tracking-widest" id="level-indicator">卷軸 1 / 5</span>
+            </div>
+
+            <!-- 任務說明區 -->
+            <h2 id="level-title" class="text-xl text-yellow-500 font-bold mb-3 drop-shadow-md">第一章：啟動召喚陣</h2>
+            <div class="bg-black/40 p-4 rounded-lg border border-purple-900/50 mb-6 backdrop-blur-sm">
+                <p id="level-desc" class="text-slate-300 text-sm md:text-base leading-relaxed">
+                    目標說明載入中...
+                </p>
+            </div>
+
+            <!-- 魔法書編輯器 (程式碼輸入區) -->
+            <div class="grimoire-container font-code text-sm md:text-base mb-6">
+                <div class="text-slate-500 mb-2 italic">/* 詠唱對象：召喚陣 (Container) */</div>
+                <div class="text-purple-400 mb-1">.summoning-circle {</div>
+                
+                <!-- 顯示預設已經寫好的 CSS (唯讀) -->
+                <div id="base-css" class="pl-8 text-slate-500 mb-1 whitespace-pre-line hidden"></div>
+                
+                <!-- 讓學生輸入的地方 -->
+                <div class="pl-8 relative">
+                    <textarea id="css-input" autocomplete="off" spellcheck="false" placeholder="/* 在此輸入 Flexbox 咒語 */"></textarea>
+                </div>
+                <div class="text-purple-400 mt-1">}</div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <!-- 檢查按鈕與結果回饋 -->
+                <div class="flex items-center gap-4">
+                    <button id="check-btn" class="py-2.5 px-8 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded shadow-[0_0_15px_rgba(126,34,206,0.6)] border border-purple-400 transition-all hover:scale-105">
+                        ⚡ 釋放魔法
+                    </button>
+                    <span id="feedback-msg" class="text-sm font-bold opacity-0 transition-opacity"></span>
+                </div>
+
+                <!-- 提示功能 -->
+                <div>
+                    <button id="hint-btn" class="text-sm text-yellow-600 hover:text-yellow-400 font-bold transition-colors flex items-center gap-1">
+                        <span>👁️</span> 尋求先知指引 (提示)
+                    </button>
+                    <div id="hint-text" class="hidden mt-3 p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg text-yellow-200 text-sm leading-relaxed shadow-inner">
+                        提示內容載入中...
+                    </div>
+                </div>
+
+                <!-- 過關後的下一關按鈕 -->
+                <button id="next-btn" class="hidden mt-2 py-3 bg-gradient-to-r from-green-700 to-emerald-600 hover:from-green-600 hover:to-emerald-500 text-white font-bold rounded border border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.5)] transition-all">
+                    翻閱下一章 ➔
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="arena" class="relative">
+        <div class="spell-field" id="spell-field">
+            <!-- 目標圖層 (顯示紅色虛線的結界凹槽) -->
+            <div id="targets-layer" class="flex-layer">
+                <!-- 由 JS 動態產生 target-rune -->
+            </div>
+            
+            <!-- 玩家控制圖層 (套用學生輸入的 CSS) -->
+            <div id="player-layer" class="flex-layer">
+                <!-- 由 JS 動態產生 player-rune (元素精靈) -->
+            </div>
+        </div>
+        
+        <!-- 過關大字提示 -->
+        <div id="win-message" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 transition-opacity duration-500 z-20 w-full">
+            <h2 class="text-5xl md:text-6xl text-green-400 drop-shadow-[0_0_25px_rgba(34,197,94,1)] font-bold text-center tracking-widest uppercase">
+                Spell Bound!
+            </h2>
+        </div>
+    </section>
+
+    <script>
+        /**
+         * 關卡資料庫 (Level Data)
+         * 完美對應講義的 5 個練習：display, justify-content, align-items, flex-direction, flex-wrap
+         */
+        const levels = [
+            {
+                title: "第一章：啟動召喚陣 (display)",
+                desc: "見習魔法師，歡迎來到學院！你的元素精靈目前散落一地。<br>請在魔法書輸入咒語，啟動外層的「召喚陣」，讓這三顆精靈建立連結並<b>橫排顯示</b>。",
+                hint: "💡 提示：所有 Flexbox 魔法的起手式，必須先在父容器設定 display 屬性。<br>試著輸入：<br><code class='text-purple-300'>display: flex;</code>",
+                baseStyle: "", 
+                targetStyle: "display: flex;",
+                items: ["🔥", "💧", "🍃"]
+            },
+            {
+                title: "第二章：水平匯聚 (justify-content)",
+                desc: "陣法已啟動，但精靈們都擠在法陣邊緣。<br>請詠唱咒語，將它們在主軸（水平方向）上<b>對齊到法陣正中央</b>的結界凹槽中。",
+                hint: "💡 提示：控制「主軸（水平）」對齊的屬性是 justify-content。置中的值是 center。<br>試著輸入：<br><code class='text-purple-300'>justify-content: center;</code>",
+                baseStyle: "display: flex;", 
+                targetStyle: "justify-content: center;",
+                items: ["🔮", "🔮", "🔮"]
+            },
+            {
+                title: "第三章：垂直校準 (align-items)",
+                desc: "精靈現在漂浮在法陣的頂部。<br>請將它們在交叉軸（垂直方向）也<b>對齊到正中央</b>，完美嵌入目標中。",
+                hint: "💡 提示：控制「交叉軸（垂直）」對齊的屬性是 align-items。置中的值也是 center。<br>試著輸入：<br><code class='text-purple-300'>align-items: center;</code>",
+                baseStyle: "display: flex;\njustify-content: center;", 
+                targetStyle: "align-items: center;",
+                items: ["✨", "✨", "✨"]
+            },
+            {
+                title: "第四章：魔力逆轉 (flex-direction)",
+                desc: "防禦陣型需要改變！敵人從上方襲來。<br>請將精靈的排列主軸，從預設的橫向<b>改變為直向（由上到下）</b>，形成防禦柱。",
+                hint: "💡 提示：改變主軸方向的屬性是 flex-direction。直向（欄位）的值為 column。<br>試著輸入：<br><code class='text-purple-300'>flex-direction: column;</code>",
+                baseStyle: "display: flex;\njustify-content: center;\nalign-items: center;",
+                targetStyle: "flex-direction: column;",
+                items: ["🛡️", "🛡️", "🛡️"]
+            },
+            {
+                title: "第五章：萬法歸宗 (flex-wrap)",
+                desc: "危險！你一次召喚了太多的光球，它們全部擠在同一行，法力互相干擾縮小了！<br>請設定當空間不足時，光球會<b>自動換行</b>排列。",
+                hint: "💡 提示：預設下 Flexbox 會把所有元素塞在同一行。要允許元素換到下一行，請使用 flex-wrap 屬性，並設定為 wrap。<br>試著輸入：<br><code class='text-purple-300'>flex-wrap: wrap;</code>",
+                baseStyle: "display: flex;\njustify-content: center;\nalign-content: center;", // 加入 align-content 讓多行置中好看點
+                targetStyle: "flex-wrap: wrap;",
+                // 產生 12 個隨機光球來觸發換行
+                items: Array(12).fill().map((_, i) => ['🔥', '💧', '🍃', '✨', '🔮', '⚡'][i % 6])
+            }
+        ];
+
+        let currentLevelIndex = 0;
+        let isLevelComplete = false;
+
+        /*
+         * 【教學註解 1：取得 HTML 元素】
+         * 為了讓 JS 能控制畫面，我們先把畫面上需要的標籤抓出來存成變數。
+         */
+        const levelTitle = document.getElementById('level-title');
+        const levelDesc = document.getElementById('level-desc');
+        const levelIndicator = document.getElementById('level-indicator');
+        const baseCssDisplay = document.getElementById('base-css');
+        const cssInput = document.getElementById('css-input');
+        
+        const targetsLayer = document.getElementById('targets-layer');
+        const playerLayer = document.getElementById('player-layer');
+        const spellField = document.getElementById('spell-field');
+        
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        
+        const hintBtn = document.getElementById('hint-btn');
+        const hintText = document.getElementById('hint-text');
+        const winMessage = document.getElementById('win-message');
+
+        function loadLevel(index) {
+            if (index < 0 || index >= levels.length) return;
+            
+            currentLevelIndex = index;
+            const level = levels[index];
+            isLevelComplete = false;
+
+            // 1. 更新左側卷軸文字資訊
+            levelTitle.innerText = level.title;
+            levelDesc.innerHTML = level.desc;
+            levelIndicator.innerText = `卷軸 ${index + 1} / ${levels.length}`;
+            hintText.innerHTML = level.hint;
+            hintText.classList.add('hidden');
+            
+            // 2. 設定魔法書編輯器狀態
+            cssInput.value = ""; 
+            if (level.baseStyle) {
+                baseCssDisplay.innerText = level.baseStyle;
+                baseCssDisplay.classList.remove('hidden');
+            } else {
+                baseCssDisplay.classList.add('hidden');
+            }
+            
+            // 3. 設定目標圖層 (背後的結界凹槽 - 代表正確答案)
+            targetsLayer.style.cssText = level.baseStyle + "\n" + level.targetStyle;
+            
+            // 4. 設定玩家圖層 (初始狀態)
+            playerLayer.style.cssText = level.baseStyle;
+
+            // 5. 產生 DOM 元素 (光球/精靈)
+            targetsLayer.innerHTML = "";
+            playerLayer.innerHTML = "";
+            
+            level.items.forEach(emoji => {
+                // 目標凹槽
+                const target = document.createElement('div');
+                target.className = 'target-rune';
+                targetsLayer.appendChild(target);
+
+                // 玩家控制的精靈實體
+                const spell = document.createElement('div');
+                spell.className = 'player-rune';
+                spell.innerText = emoji;
+                playerLayer.appendChild(spell);
+            });
+
+            // 6. 重置所有特效與 UI
+            spellField.classList.remove('win-state');
+            winMessage.style.opacity = '0';
+            nextBtn.classList.add('hidden');
+            checkBtn.disabled = false;
+            checkBtn.classList.remove('opacity-50');
+            
+            feedbackMsg.style.opacity = '0'; 
+            cssInput.focus();
+        }
+
+        function checkAnswer() {
+            if (isLevelComplete) return;
+
+            /* 
+             * 【教學註解 2：套用學生寫的樣式】
+             * 將預設 CSS (baseStyle) 和學生輸入的 CSS (userInput) 組合，
+             * 直接寫入 playerLayer 的 style 中，畫面上的精靈就會即時移動。
+             */
+            const level = levels[currentLevelIndex];
+            const userInput = cssInput.value;
+            playerLayer.style.cssText = level.baseStyle + "\n" + userInput;
+
+            feedbackMsg.innerText = "✨ 感應魔力中...";
+            feedbackMsg.className = "text-sm font-bold text-purple-300 opacity-100 transition-opacity";
+
+            /* 
+             * 【教學註解 3：利用 setTimeout 等待畫面渲染】
+             * 瀏覽器套用 CSS 後，需要一小段時間「重新計算版面」。
+             * 等待 150 毫秒，確保精靈移動到最終位置後，我們才進行座標比對。
+             */
+            setTimeout(() => {
+                const targets = targetsLayer.children; // 結界凹槽 (正確位置)
+                const spells = playerLayer.children;   // 精靈光球 (玩家位置)
+                let isCorrect = true;
+
+                /* 
+                 * 【教學註解 4：通關判定邏輯】
+                 * 使用 getBoundingClientRect() 取得元素在螢幕上的實際座標。
+                 * 檢查每一顆精靈的「中心點」是否與對應凹槽的「中心點」重合（容許 2px 誤差）。
+                 */
+                for (let i = 0; i < spells.length; i++) {
+                    const targetRect = targets[i].getBoundingClientRect();
+                    const spellRect = spells[i].getBoundingClientRect();
+
+                    // 計算 X/Y 的中心點
+                    const tX = targetRect.left + targetRect.width / 2;
+                    const tY = targetRect.top + targetRect.height / 2;
+                    const sX = spellRect.left + spellRect.width / 2;
+                    const sY = spellRect.top + spellRect.height / 2;
+
+                    // 誤差 > 2px 就判定失敗
+                    if (Math.abs(tX - sX) > 2 || Math.abs(tY - sY) > 2) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+
+                if (isCorrect) {
+                    handleWin();
+                } else {
+                    feedbackMsg.innerText = "❌ 魔法陣不穩定，咒語似乎有誤！";
+                    feedbackMsg.classList.replace('text-purple-300', 'text-red-400');
+                }
+            }, 150);
+        }
+
+        function handleWin() {
+            isLevelComplete = true;
+            
+            // 觸發視覺特效
+            spellField.classList.add('win-state');
+            winMessage.style.opacity = '1';
+            
+            feedbackMsg.innerText = "🌟 詠唱成功！魔力完美共鳴！";
+            feedbackMsg.className = "text-sm font-bold text-green-400 opacity-100 transition-opacity drop-shadow-md";
+
+            checkBtn.disabled = true;
+            checkBtn.classList.add('opacity-50');
+            
+            if (currentLevelIndex < levels.length - 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                // 全部破關
+                winMessage.innerHTML = `<h2 class="text-4xl md:text-5xl text-yellow-400 drop-shadow-[0_0_20px_rgba(234,179,8,1)] font-bold text-center uppercase tracking-widest"><span class="text-6xl mb-2 block">🎓</span>Archmage<br><span class="text-xl text-yellow-200 tracking-normal mt-4 block">你已完全掌握 Flexbox 基礎魔法！</span></h2>`;
+                nextBtn.classList.add('hidden');
+            }
+        }
+
+        checkBtn.addEventListener('click', checkAnswer);
+
+        // 快捷鍵：Ctrl+Enter 執行魔法
+        cssInput.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                checkAnswer();
+            }
+            // 處理 Tab 縮排，讓輸入體驗更好
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+                e.target.value = e.target.value.substring(0, start) + "  " + e.target.value.substring(end);
+                e.target.selectionStart = e.target.selectionEnd = start + 2;
+            }
+        });
+
+        hintBtn.addEventListener('click', () => {
+            hintText.classList.toggle('hidden');
+        });
+
+        nextBtn.addEventListener('click', () => {
+            loadLevel(currentLevelIndex + 1);
+        });
+
+        // 視窗縮放時重新判定（避免 RWD 讓座標跑掉）
+        window.addEventListener('resize', () => {
+            if (!isLevelComplete && cssInput.value.trim() !== "") {
+                checkAnswer(); 
+            }
+        });
+
+        // 網頁載入後啟動第一關
+        window.onload = () => {
+            loadLevel(0);
+        };
+    </script>
+</body>
+</html>
